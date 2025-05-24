@@ -1,0 +1,357 @@
+-- Services
+local player = game:GetService("Players").LocalPlayer
+local userInputService = game:GetService("UserInputService")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local lighting = game:GetService("Lighting")
+local TweenService = game:GetService("TweenService")
+local runService = game:GetService("RunService")
+
+-- GUI Setup
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "RenameGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local blur = lighting:FindFirstChild("RenameGuiBlur")
+if not blur then
+    blur = Instance.new("BlurEffect")
+    blur.Name = "RenameGuiBlur"
+    blur.Size = 0
+    blur.Parent = lighting
+end
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 300, 0, 680)
+frame.Position = UDim2.new(0.5, -150, 0.5, -340)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+frame.BorderColor3 = Color3.fromRGB(50, 50, 50)
+frame.Parent = screenGui
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(0, 200, 0, 50)
+title.Position = UDim2.new(0.5, -100, 0, -60)
+title.BackgroundTransparency = 1
+title.Text = "BRC"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 40
+title.TextStrokeTransparency = 0.7
+title.Parent = frame
+
+local tweenInfo = TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local tweenProps = {
+    Position = UDim2.new(0.5, -100, 0, 10),
+    TextTransparency = 0,
+}
+local tween = TweenService:Create(title, tweenInfo, tweenProps)
+title.TextTransparency = 1
+tween:Play()
+
+-- Styling
+local rainbowEnabled = true
+local staticOutlineColor = Color3.new(1, 0, 0)
+local buttons = {}
+
+local function createOutline(guiObject)
+    local stroke = Instance.new("UIStroke")
+    stroke.Thickness = 2
+    stroke.Parent = guiObject
+    local running = true
+    local hue = 0
+    coroutine.wrap(function()
+        while running and guiObject and guiObject.Parent do
+            stroke.Color = rainbowEnabled and Color3.fromHSV(hue / 360, 1, 1) or staticOutlineColor
+            hue = (hue + 1) % 360
+            wait(0.03)
+        end
+    end)()
+    return {
+        stroke = stroke,
+        stop = function() running = false end,
+        updateColor = function()
+            if not rainbowEnabled then
+                stroke.Color = staticOutlineColor
+            end
+        end
+    }
+end
+
+local function createButton(name, text, positionY)
+    local btn = Instance.new("TextButton")
+    btn.Name = name
+    btn.Size = UDim2.new(0, 260, 0, 40)
+    btn.Position = UDim2.new(0, 20, 0, positionY)
+    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    btn.BorderColor3 = Color3.fromRGB(50, 50, 50)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 18
+    btn.Text = text
+    btn.Parent = frame
+
+    local outline = createOutline(btn)
+    return {button = btn, outline = outline}
+end
+
+-- Button data
+local actionButtonsData = {
+    {name = "BtnRenameAkey", text = "AKEY-47", y = 60},
+    {name = "BtnRenameKeyper", text = "Keyper", y = 110},
+    {name = "BtnRenameFestiveFists", text = "Festive Fists", y = 160},
+    {name = "BtnRenameBatScythe", text = "Bat Scythe", y = 210},
+    {name = "BtnSwapFinishers", text = "Diamond Hands", y = 260}, -- updated text
+    {name = "BtnRenamePumpkinClaws", text = "Pumpkin Claws", y = 310},
+    {name = "BtnRenamePhoenixRifle", text = "Phoenix Rifle", y = 360},
+    {name = "BtnRenameKeytana", text = "Keytana", y = 410},
+    {name = "BtnRenameVexedCandle", text = "Vexed Candle", y = 460},
+    {name = "BtnRenameEyeball", text = "Eyeball", y = 510},
+    {name = "BtnRenameShiningStar", text = "Shining Star", y = 560},
+}
+
+for _, data in ipairs(actionButtonsData) do
+    local b = createButton(data.name, data.text, data.y)
+    table.insert(buttons, b)
+end
+
+-- Settings controls
+local settingsLabel = Instance.new("TextLabel")
+settingsLabel.Size = UDim2.new(0, 260, 0, 25)
+settingsLabel.Position = UDim2.new(0, 20, 0, 610)
+settingsLabel.BackgroundTransparency = 1
+settingsLabel.Text = "Settings"
+settingsLabel.Font = Enum.Font.GothamBold
+settingsLabel.TextSize = 20
+settingsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+settingsLabel.Parent = frame
+
+local rainbowToggleBtn = Instance.new("TextButton")
+rainbowToggleBtn.Size = UDim2.new(0, 120, 0, 30)
+rainbowToggleBtn.Position = UDim2.new(0, 20, 0, 645)
+rainbowToggleBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+rainbowToggleBtn.BorderColor3 = Color3.fromRGB(50, 50, 50)
+rainbowToggleBtn.TextColor3 = Color3.new(1, 1, 1)
+rainbowToggleBtn.Font = Enum.Font.SourceSansBold
+rainbowToggleBtn.TextSize = 16
+rainbowToggleBtn.Text = "Rainbow: ON"
+rainbowToggleBtn.Parent = frame
+
+local colorPickerBtn = Instance.new("TextButton")
+colorPickerBtn.Size = UDim2.new(0, 120, 0, 30)
+colorPickerBtn.Position = UDim2.new(0, 160, 0, 645)
+colorPickerBtn.BackgroundColor3 = staticOutlineColor
+colorPickerBtn.BorderColor3 = Color3.fromRGB(50, 50, 50)
+colorPickerBtn.TextColor3 = Color3.new(1, 1, 1)
+colorPickerBtn.Font = Enum.Font.SourceSansBold
+colorPickerBtn.TextSize = 16
+colorPickerBtn.Text = "Outline Color"
+colorPickerBtn.Parent = frame
+
+local presetColors = {
+    Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 255, 0), Color3.fromRGB(0, 0, 255),
+    Color3.fromRGB(255, 255, 0), Color3.fromRGB(255, 0, 255), Color3.fromRGB(0, 255, 255),
+    Color3.fromRGB(255, 128, 0),
+}
+local colorIndex = 1
+
+local function updateAllOutlines()
+    for _, btnData in ipairs(buttons) do
+        if not rainbowEnabled then
+            btnData.outline.updateColor()
+        end
+    end
+end
+
+rainbowToggleBtn.MouseButton1Click:Connect(function()
+    rainbowEnabled = not rainbowEnabled
+    rainbowToggleBtn.Text = "Rainbow: " .. (rainbowEnabled and "ON" or "OFF")
+    colorPickerBtn.Active = not rainbowEnabled
+    colorPickerBtn.AutoButtonColor = not rainbowEnabled
+    colorPickerBtn.BackgroundColor3 = rainbowEnabled and Color3.fromRGB(35, 35, 35) or staticOutlineColor
+    updateAllOutlines()
+end)
+
+colorPickerBtn.MouseButton1Click:Connect(function()
+    if rainbowEnabled then return end
+    colorIndex = colorIndex % #presetColors + 1
+    staticOutlineColor = presetColors[colorIndex]
+    colorPickerBtn.BackgroundColor3 = staticOutlineColor
+    updateAllOutlines()
+end)
+
+-- Logic
+local playerScripts = player:WaitForChild("PlayerScripts")
+local assets = playerScripts:WaitForChild("Assets")
+local viewModels = assets:WaitForChild("ViewModels")
+local other = viewModels:WaitForChild("Other")
+local festiveCase = viewModels:WaitForChild("Festive Skin Case")
+local spookyCase = viewModels:WaitForChild("Spooky Skin Case")
+local modules = replicatedStorage:WaitForChild("Modules")
+local finishers = modules:WaitForChild("Finishers")
+
+local function renameModel(folder, oldName, newName)
+    local model = folder:FindFirstChild(oldName)
+    if model then
+        model.Name = newName
+        print("Renamed " .. oldName .. " to " .. newName)
+    else
+        warn(oldName .. " not found in " .. folder.Name)
+    end
+end
+
+local function swapNames(folder, nameA, nameB)
+    local a = folder:FindFirstChild(nameA)
+    local b = folder:FindFirstChild(nameB)
+    if a and b then
+        a.Name = "_TempNameSwap"
+        b.Name = nameA
+        a.Name = nameB
+        print("Swapped " .. nameA .. " and " .. nameB)
+    else
+        warn("One or both models not found in " .. folder.Name)
+    end
+end
+
+local function revertAssaultRifle()
+    local assaultRifle = other:FindFirstChild("Assault Rifle")
+    if assaultRifle then
+        if not other:FindFirstChild("AKEY-47") then
+            assaultRifle.Name = "AKEY-47"
+            return
+        end
+        if not other:FindFirstChild("Phoenix Rifle") then
+            assaultRifle.Name = "Phoenix Rifle"
+            return
+        end
+    end
+end
+
+local function renameAll(oldName, newName)
+    local count = 0
+    local function recurseRename(parent)
+        for _, child in ipairs(parent:GetChildren()) do
+            if child.Name == oldName then
+                child.Name = newName
+                count = count + 1
+            end
+            recurseRename(child)
+        end
+    end
+    recurseRename(game)
+    print("Renamed " .. count .. " instance(s) from " .. oldName .. " to " .. newName)
+end
+
+-- Button Connections
+buttons[1].button.MouseButton1Click:Connect(function()
+    revertAssaultRifle()
+    renameModel(other, "AKEY-47", "Assault Rifle")
+end)
+
+buttons[2].button.MouseButton1Click:Connect(function()
+    renameModel(other, "Keyper", "Sniper")
+end)
+
+buttons[3].button.MouseButton1Click:Connect(function()
+    local pumpkinClaws = spookyCase:FindFirstChild("Fists")
+    if pumpkinClaws then
+        pumpkinClaws.Name = "Pumpkin Claws"
+    end
+    renameModel(festiveCase, "Festive Fists", "Fists")
+end)
+
+buttons[4].button.MouseButton1Click:Connect(function()
+    renameModel(spookyCase, "Bat Scythe", "Scythe")
+end)
+
+buttons[5].button.MouseButton1Click:Connect(function()
+    swapNames(finishers, "Ragdoll", "Diamond Hands")
+end)
+
+buttons[6].button.MouseButton1Click:Connect(function()
+    local festiveFists = festiveCase:FindFirstChild("Fists")
+    if festiveFists then
+        festiveFists.Name = "Festive Fists"
+    end
+    renameModel(spookyCase, "Pumpkin Claws", "Fists")
+end)
+
+buttons[7].button.MouseButton1Click:Connect(function()
+    revertAssaultRifle()
+    renameModel(other, "Phoenix Rifle", "Assault Rifle")
+end)
+
+buttons[8].button.MouseButton1Click:Connect(function()
+    renameModel(other, "Keytana", "Katana")
+end)
+
+buttons[9].button.MouseButton1Click:Connect(function()
+    renameAll("Vexed Candle", "Molotov")
+end)
+
+buttons[10].button.MouseButton1Click:Connect(function()
+    renameAll("Eyeball", "Smoke Grenade")
+end)
+
+buttons[11].button.MouseButton1Click:Connect(function()
+    renameAll("Shining Star", "Flashbang")
+end)
+
+-- GUI toggle
+local function toggleGui()
+    screenGui.Enabled = not screenGui.Enabled
+    if screenGui.Enabled then
+        for i = 0, 24 do
+            blur.Size = i
+            wait(0.01)
+        end
+        title.Position = UDim2.new(0.5, -100, 0, -60)
+        title.TextTransparency = 1
+        tween:Play()
+    else
+        blur.Size = 0
+    end
+end
+
+screenGui.Enabled = false
+
+userInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.RightControl or input.KeyCode == Enum.KeyCode.RightShift then
+        toggleGui()
+    end
+end)
+
+-- GUI dragging
+local dragging = false
+local dragInput, dragStart, startPos
+
+title.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+title.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+userInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
